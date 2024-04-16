@@ -69,8 +69,13 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Plot torque and power curves.')
     parser.add_argument('--torque', action='store_true', help='Plot torque curve')
     parser.add_argument('--power', action='store_true', help='Plot power curve')
-    parser.add_argument('--output', default='torque_and_power_vs_rpm.png', help='Output file path for the graph (default: torque_and_power_vs_rpm.png)')
-    return parser.parse_args()
+    parser.add_argument('--output', required=True, default='torque_and_power_vs_rpm.png', help='Output file path for the graph (default: torque_and_power_vs_rpm.png)')
+    args = parser.parse_args()
+
+    if not(args.torque or args.power):
+        parser.error("No torque or power calculation requested. See --help for usage.")
+
+    return args
 
 
 def model1(no_throttle_tq, full_throttle_tq):
@@ -89,8 +94,6 @@ def model1(no_throttle_tq, full_throttle_tq):
 
 
 args = parse_arguments()
-if not args.torque and not args.power:
-    exit(0)
 
 rpm = [data[0] for data in torque_curve]
 full_throttle_tq = [data[1] for data in torque_curve]
@@ -105,11 +108,11 @@ fig, ax1 = plt.subplots(figsize=(10, 6))
 
 # Plot torque vs RPM
 if args.torque:
-    ax1.plot(rpm, no_throttle_tq, marker='o', linestyle='-', color='b', label='Torque (Nm)')
-    ax1.plot(rpm, full_throttle_tq, marker='o', linestyle='-', color='b', label='Torque (Nm)')
+    ax1.plot(rpm, no_throttle_tq, marker='', linestyle='-', color='b', label='Torque (Nm)')
+    ax1.plot(rpm, full_throttle_tq, marker='', linestyle='-', color='b', label='Torque (Nm)')
 
     for tq in inbetween_tq.values():
-        ax1.plot(rpm, tq, marker='o', linestyle='-', color='c', label='Torque (Nm)')
+        ax1.plot(rpm, tq, marker='', linestyle='-', color='c', label='Torque (Nm)')
     
     ax1.set_ylabel('Torque (Nm)', color='b')
     ax1.tick_params(axis='y', labelcolor='b')
@@ -125,11 +128,11 @@ if args.power:
         for throttle in throttle_values}
 
     ax2 = ax1.twinx()
-    ax2.plot(rpm, no_throttle_power, marker='o', linestyle='-', color='r', label='Power (kW)')
-    ax2.plot(rpm, full_throttle_power, marker='o', linestyle='-', color='r', label='Power (kW)')
+    ax2.plot(rpm, no_throttle_power, marker='', linestyle='-', color='r', label='Power (kW)')
+    ax2.plot(rpm, full_throttle_power, marker='', linestyle='-', color='r', label='Power (kW)')
 
     for p in inbetween_power.values():
-        ax2.plot(rpm, p, marker='o', linestyle='-', color='y', label='Torque (Nm)')
+        ax2.plot(rpm, p, marker='', linestyle='-', color='y', label='Torque (Nm)')
 
     ax2.set_ylabel('Power (kW)', color='r')
     ax2.tick_params(axis='y', labelcolor='r')
@@ -149,4 +152,5 @@ with open('data.json', 'w') as f:
         1.0: full_throttle_tq,
         **inbetween_tq
     }
+    print("Writing computed torque curves to data.json")
     json.dump(output, f)
