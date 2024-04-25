@@ -88,7 +88,9 @@ def model1(no_throttle_tq, full_throttle_tq):
             for i in range(num_samples)]
 
     def get_inbetween_tq(lower, upper, throttle):
-        return lower + (upper - lower) * throttle
+        val = lower + (upper - lower) * throttle
+        formatted = float("{:.2f}".format(val))
+        return formatted
 
     return compute
 
@@ -96,8 +98,8 @@ def model1(no_throttle_tq, full_throttle_tq):
 args = parse_arguments()
 
 rpm = [data[0] for data in torque_curve]
-full_throttle_tq = [data[1] for data in torque_curve]
-no_throttle_tq = [-0.003 * r + 2.55 for r in rpm]
+full_throttle_tq = [float("{:.2f}".format(data[1])) for data in torque_curve]
+no_throttle_tq = [float("{:.2f}".format(-0.003 * r + 2.55)) for r in rpm]
 
 throttle_values = [x/10 for x in range(1, 10)]
 
@@ -147,10 +149,11 @@ plt.close()
 
 with open('data.json', 'w') as f:
     output = {
+        'throttle_values': [0.0, *throttle_values, 1.0],
         'rpm_values': rpm,
         0.0: no_throttle_tq,
+        **inbetween_tq,
         1.0: full_throttle_tq,
-        **inbetween_tq
     }
     print("Writing computed torque curves to data.json")
-    json.dump(output, f)
+    json.dump(output, f, indent=4)
